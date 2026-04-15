@@ -1,0 +1,14 @@
+[Unit]
+Description=SnapStash WiFi Hotspot Fallback
+After=network.target
+Before=snapstash-mdns.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/snapstash/services/wifi_hotspot.py
+Restart=always
+RestartSec=10
+User=root
+
+[Install]
+WantedBy=multi-user.target

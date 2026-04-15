@@ -1,0 +1,14 @@
+[Unit]
+Description=SnapStash mDNS Broadcaster
+After=network-online.target avahi-daemon.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/snapstash/services/mdns_broadcaster.py
+Restart=always
+RestartSec=10
+User=root
+
+[Install]
+WantedBy=multi-user.target

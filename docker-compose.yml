@@ -1,0 +1,50 @@
+version: "3.8"
+
+services:
+  # --- FastAPI Backend ---
+  backend:
+    build: ./backend
+    container_name: snapstash-backend
+    volumes:
+      - /data/snapstash:/data/snapstash          # USB HDD mount
+    environment:
+      - SNAPSTASH_STORAGE_PATH=/data/snapstash/photos
+      - SNAPSTASH_TEMP_PATH=/data/snapstash/temp
+      - SNAPSTASH_DB_PATH=/data/snapstash/metadata.db
+      - SNAPSTASH_BASE_URL=http://snapstash.local
+    restart: unless-stopped
+    networks:
+      - snapstash
+
+  # --- Nginx Reverse Proxy + Frontend ---
+  nginx:
+    build: ./nginx
+    container_name: snapstash-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+      - frontend
+    volumes:
+      - frontend-dist:/usr/share/nginx/html:ro
+    restart: unless-stopped
+    networks:
+      - snapstash
+
+  # --- Frontend Build (produces static files) ---
+  frontend:
+    build: ./frontend
+    container_name: snapstash-frontend-build
+    volumes:
+      - frontend-dist:/dist
+    # Build-only container — copies built files to volume then exits
+    entrypoint: ["sh", "-c", "cp -r /app/dist/* /dist/ 2>/dev/null || true"]
+
+volumes:
+  frontend-dist:
+    driver: local
+
+networks:
+  snapstash:
+    driver: bridge

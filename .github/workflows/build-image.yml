@@ -1,0 +1,55 @@
+name: Build SnapStash Raspberry Pi Image
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+
+      - name: Build Pi image
+        uses: usimd/pi-gen-action@v1
+        id: build
+        with:
+          image-name: snapstash
+          stage-list: stage0 stage1 stage2 ./pi-gen-stage
+          release: bookworm
+          enable-noobs: false
+          compression: xz
+          compression-level: 9
+          hostname: snapstash
+          username: pi
+          password: snapstash
+          locale: en_US.UTF-8
+          keyboard-keymap: us
+          keyboard-layout: English (US)
+          wpa-essid: ''
+          wpa-password: ''
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapstash-image
+          path: ${{ steps.build.outputs.image-path }}
+          retention-days: 30
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.build.outputs.image-path }}
+          generate_release_notes: true

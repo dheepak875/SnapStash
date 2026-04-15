@@ -1,0 +1,13 @@
+[Unit]
+Description=SnapStash USB Auto-Mount Daemon
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/snapstash/services/usb_monitor.py
+Restart=always
+RestartSec=5
+User=root
+
+[Install]
+WantedBy=multi-user.target
